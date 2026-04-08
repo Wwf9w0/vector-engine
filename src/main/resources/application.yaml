@@ -1,0 +1,139 @@
+spring:
+  application:
+    name: vektor-engine
+# ═══════════════════════════════════════════════════════════════════════════════
+# Neural Recall Backend - Application Configuration
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# This file configures the Second Brain API with:
+# - Virtual Threads (Java 21) for efficient async I/O
+# - PostgreSQL with pgvector for semantic search
+# - Ollama integration for AI embeddings
+#
+# Profiles:
+#   - Default (mock): Uses MockEmbeddingService - no Ollama needed
+#   - real: Uses OllamaEmbeddingClient - requires running Ollama
+#
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Virtual Threads Configuration (Java 21)
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Enables Virtual Threads for all request handling:
+  # - Each HTTP request runs on a lightweight Virtual Thread
+  # - Blocking I/O (DB, HTTP calls) doesn't block platform threads
+  # - Can handle thousands of concurrent requests efficiently
+  # ─────────────────────────────────────────────────────────────────────────────
+  threads:
+    virtual:
+      enabled: true
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Database Configuration
+  # ─────────────────────────────────────────────────────────────────────────────
+  datasource:
+    url: jdbc:postgresql://localhost:5433/vektor_engine
+    username: neural
+    password: recall
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: vektor-engine-pool
+
+  # SQL initialization (disabled - handled by Docker init scripts)
+  sql:
+    init:
+      mode: never
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Ollama AI Configuration (Type-Safe via OllamaProperties)
+# ═══════════════════════════════════════════════════════════════════════════════
+# These properties are bound to OllamaProperties.java
+# ═══════════════════════════════════════════════════════════════════════════════
+ollama:
+  base-url: http://localhost:11434
+  model: nomic-embed-text:latest
+  embedding-dimensions: 768
+  timeout-seconds: 30
+  retry:
+    max-attempts: 3
+    initial-delay-ms: 1000
+    multiplier: 2.0
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# AI Mode Toggle
+# ═══════════════════════════════════════════════════════════════════════════════
+# Options:
+#   - 'mock' (default): Uses MockEmbeddingService - deterministic random vectors
+#   - 'real': Uses OllamaEmbeddingClient - requires running Ollama instance
+#
+# Switch with: --spring.profiles.active=real
+# Or set: ai.mode=real
+# ═══════════════════════════════════════════════════════════════════════════════
+ai:
+  mode: real
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Search Configuration (Type-Safe via SearchProperties)
+# ═══════════════════════════════════════════════════════════════════════════════
+# Note: min-similarity-threshold filters out unrelated notes.
+# - For REAL AI mode: Use 0.3-0.5 (30-50% similarity minimum)
+# - For MOCK mode: Use 0.0 (mock embeddings are random, not semantic)
+# ═══════════════════════════════════════════════════════════════════════════════
+search:
+  default-limit: 10
+  max-limit: 100
+  min-similarity-threshold: 0.5  # 50% minimum - filters out loosely related results
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# OpenAPI / Swagger UI Configuration
+# ═══════════════════════════════════════════════════════════════════════════════
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /documentation
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Actuator Endpoints (Production Monitoring)
+# ═══════════════════════════════════════════════════════════════════════════════
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Logging Configuration
+# ═══════════════════════════════════════════════════════════════════════════════
+logging:
+  level:
+    root: INFO
+    com.neuralrecall: DEBUG
+    org.springframework.retry: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) [%15.15thread] %cyan(%-40.40logger{39}) : %msg%n"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Server Configuration
+# ═══════════════════════════════════════════════════════════════════════════════
+server:
+  port: 8085
+  servlet:
+    context-path: /api
+  shutdown: graceful
