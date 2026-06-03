@@ -1,6 +1,7 @@
 package com.vector.engine.service;
 
 import com.vector.engine.client.EmbeddingService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -13,14 +14,11 @@ import java.util.concurrent.Executors;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class BrainService {
 
     private final EmbeddingService embeddingService;
     private final ExecutorService virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();
-
-    public BrainService(EmbeddingService embeddingService) {
-        this.embeddingService = embeddingService;
-    }
 
     public CompletableFuture<String> createEmbedding(String content) {
         final Instant startTime = Instant.now();

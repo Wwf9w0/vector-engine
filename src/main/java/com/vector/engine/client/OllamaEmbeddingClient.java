@@ -42,7 +42,7 @@ public class OllamaEmbeddingClient implements EmbeddingService {
                 properties.model(),
                 properties.embeddingDimensions(),
                 properties.timeoutSeconds());
-        log.info("♻️ Retry config | MaxAttempts: {} | InitialDelay: {}ms | Multiplier: {}",
+        log.info(" Retry config | MaxAttempts: {} | InitialDelay: {}ms | Multiplier: {}",
                 properties.retry().maxAttempts(),
                 properties.retry().initialDelayMs(),
                 properties.retry().multiplier());

@@ -16,15 +16,10 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Allow all origins for development
-        // In production, replace with:
-        // config.setAllowedOrigins(List.of("https://yourdomain.com"));
         config.setAllowedOriginPatterns(List.of("*"));
 
-        // Allow common HTTP methods
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
-        // Allow common headers
         config.setAllowedHeaders(Arrays.asList(
                 "Origin",
                 "Content-Type",
@@ -32,10 +27,8 @@ public class CorsConfig {
                 "Authorization",
                 "X-Requested-With"));
 
-        // Allow credentials (cookies, authorization headers)
         config.setAllowCredentials(true);
 
-        // Cache preflight response for 1 hour
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
